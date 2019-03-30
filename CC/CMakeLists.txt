@@ -44,12 +44,24 @@ if ( WIN32 )
 	endif()
 endif()
 
+set( CMAKE_CXX_VISIBILITY_PRESET hidden )
 
 if (COMPILE_CC_CORE_LIB_SHARED)
 	add_library( ${PROJECT_NAME} SHARED ${header_list} ${source_list} )
 else()
 	add_library( ${PROJECT_NAME} STATIC ${header_list} ${source_list} )
+	
+	target_compile_definitions( ${PROJECT_NAME} PRIVATE CC_CORE_LIB_STATIC_DEFINE )	
 endif()
+
+# generate the export header file
+include( GenerateExportHeader )
+
+generate_export_header( ${PROJECT_NAME}
+	EXPORT_MACRO_NAME CC_CORE_LIB_API
+)
+
+target_include_directories( ${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_BINARY_DIR} )
 
 if (COMPILE_CC_CORE_LIB_WITH_CGAL)
 	target_link_libraries( ${PROJECT_NAME} ${CGAL_LIBRARIES} )
@@ -72,10 +84,6 @@ endif()
 include( ../cmake/CMakeInclude.cmake )
 
 if ( COMPILE_CC_CORE_LIB_SHARED )
-	if (WIN32)
-		set_property( TARGET ${PROJECT_NAME} APPEND PROPERTY COMPILE_DEFINITIONS CC_USE_AS_DLL )
-	endif()
-
 	# Install (shared) library to specified destinations
 	if( WIN32 OR APPLE )
 		foreach( dest ${INSTALL_DESTINATIONS} )
